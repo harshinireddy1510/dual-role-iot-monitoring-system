@@ -4,272 +4,153 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dual-Role IoT Monitoring System</title>
-
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f1f5f9;
-  color: #172033;
-}
-header {
-  background: #12345a;
-  color: white;
-  padding: 22px;
-  text-align: center;
-}
-header h1 { margin: 0 0 8px; font-size: 25px; }
-header p { margin: 0; color: #dbeafe; }
-.connection {
-  padding: 12px;
-  text-align: center;
-  background: white;
-  border-bottom: 1px solid #ddd;
-  font-size: 14px;
-}
-nav {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  padding: 16px 10px;
-  flex-wrap: wrap;
-}
-button {
-  border: 0;
-  border-radius: 8px;
-  padding: 12px 18px;
-  background: #dbeafe;
-  color: #12345a;
-  font-weight: bold;
-  cursor: pointer;
-}
-button.active { background: #12345a; color: white; }
-main { max-width: 1100px; margin: auto; padding: 12px; }
-.panel { display: none; }
-.panel.active { display: block; }
-h2 { margin-top: 8px; }
-.subtitle { color: #64748b; font-size: 14px; }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
-}
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 18px;
-  box-shadow: 0 2px 8px #0000000c;
-}
-.card h3 { margin: 0 0 12px; font-size: 16px; }
-.value { font-size: 30px; font-weight: bold; margin: 12px 0; }
-.unit { font-size: 14px; color: #64748b; }
-.gauge {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  margin: 16px auto;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(#16a34a 0deg, #e2e8f0 0deg);
-  position: relative;
-}
-.gauge::before {
-  content: "";
-  position: absolute;
-  width: 116px;
-  height: 116px;
-  border-radius: 50%;
-  background: white;
-}
-.gauge-inner {
-  z-index: 1;
-  text-align: center;
-}
-.gauge-number { font-size: 24px; font-weight: bold; }
-.gauge-unit { font-size: 12px; color: #64748b; }
-.status {
-  padding: 7px 10px;
-  display: inline-block;
-  border-radius: 6px;
-  background: #dcfce7;
-  color: #166534;
-  font-size: 12px;
-  font-weight: bold;
-}
-.status.warn { background: #fef3c7; color: #92400e; }
-.status.danger { background: #fee2e2; color: #991b1b; }
-.feed {
-  padding: 10px;
-  border-bottom: 1px solid #e2e8f0;
-  font-size: 14px;
-}
-.feed:last-child { border-bottom: 0; }
-.time { color: #64748b; font-size: 12px; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; }
-.secondary { background: #e2e8f0; color: #172033; }
-footer {
-  padding: 22px;
-  text-align: center;
-  color: #64748b;
-  font-size: 12px;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#12345a;color:white;padding:22px;text-align:center}
+header h1{margin:0 0 8px;font-size:25px}
+header p{margin:0;color:#dbeafe}
+.connection{text-align:center;background:white;padding:12px;border-bottom:1px solid #ddd;font-size:14px}
+nav{display:flex;gap:10px;justify-content:center;padding:16px;flex-wrap:wrap}
+button{border:0;border-radius:8px;padding:12px 18px;background:#dbeafe;color:#12345a;font-weight:bold;cursor:pointer}
+button.active{background:#12345a;color:white}
+main{max-width:1100px;margin:auto;padding:12px}
+.panel{display:none}
+.panel.active{display:block}
+h2{margin-top:8px}
+.subtitle{color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin:20px 0}
+.card{background:white;border-radius:12px;padding:18px;box-shadow:0 2px 8px #0000000c}
+.card h3{margin:0 0 12px;font-size:16px}
+.gauge{width:150px;height:150px;border-radius:50%;margin:16px auto;display:grid;place-items:center;background:conic-gradient(#16a34a 0deg,#e2e8f0 0deg);position:relative}
+.gauge:before{content:"";position:absolute;width:116px;height:116px;border-radius:50%;background:white}
+.gauge-inner{z-index:1;text-align:center}
+.gauge-number{font-size:24px;font-weight:bold}
+.gauge-unit{font-size:12px;color:#64748b}
+.status{padding:7px 10px;display:inline-block;border-radius:6px;background:#dcfce7;color:#166534;font-size:12px;font-weight:bold}
+.status.warn{background:#fef3c7;color:#92400e}
+.status.danger{background:#fee2e2;color:#991b1b}
+.feed{padding:10px;border-bottom:1px solid #e2e8f0;font-size:14px}
+.time{color:#64748b;font-size:12px}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+.secondary{background:#e2e8f0;color:#172033}
+footer{text-align:center;padding:22px;color:#64748b;font-size:12px}
 </style>
 </head>
 
 <body>
 <header>
-  <h1>Dual-Role IoT Monitoring System</h1>
-  <p>Smart Healthcare and Facility Monitoring</p>
+<h1>Dual-Role IoT Monitoring System</h1>
+<p>Smart Healthcare and Facility Monitoring</p>
 </header>
 
 <div class="connection">
-  MQTT: <strong id="mqttStatus">Connecting...</strong>
-  &nbsp; | &nbsp; Data: <strong id="dataStatus">Demo mode</strong>
-  &nbsp; | &nbsp; Last update: <strong id="lastUpdate">Waiting</strong>
+MQTT: <strong id="mqttStatus">Connecting...</strong>
+| Data: <strong id="dataStatus">Waiting for data</strong>
+| Last update: <strong id="lastUpdate">Waiting</strong>
 </div>
 
 <nav>
-  <button id="medicalButton" class="active"
-    onclick="showRole('medical')">Medical Staff</button>
-  <button id="facilityButton"
-    onclick="showRole('facility')">Facility Management</button>
+<button id="medicalButton" class="active" onclick="showRole('medical')">Medical Staff</button>
+<button id="facilityButton" onclick="showRole('facility')">Facility Management</button>
 </nav>
 
 <main>
 <section id="medical" class="panel active">
-  <h2>Medical Staff Dashboard</h2>
-  <p class="subtitle">Patient vital signs and medical safety alerts</p>
+<h2>Medical Staff Dashboard</h2>
+<p class="subtitle">Patient vital signs and medical safety alerts</p>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Heart Rate</h3>
-      <div class="gauge" id="g_hr">
-        <div class="gauge-inner">
-          <div class="gauge-number" id="v_hr">75</div>
-          <div class="gauge-unit">bpm</div>
-        </div>
-      </div>
-      <div>Safe range: 60–100 bpm</div>
-      <p><span class="status" id="s_hr">NORMAL</span></p>
-    </div>
+<div class="grid">
+<div class="card">
+<h3>Heart Rate</h3>
+<div class="gauge" id="g_hr"><div class="gauge-inner"><div class="gauge-number" id="v_hr">--</div><div class="gauge-unit">bpm</div></div></div>
+<div>Safe reference range: 60–100 bpm</div>
+<p><span class="status" id="s_hr">WAITING</span></p>
+</div>
 
-    <div class="card">
-      <h3>Blood Oxygen (SpO₂)</h3>
-      <div class="gauge" id="g_spo2">
-        <div class="gauge-inner">
-          <div class="gauge-number" id="v_spo2">98</div>
-          <div class="gauge-unit">%</div>
-        </div>
-      </div>
-      <div>Target: 95–100%</div>
-      <p><span class="status" id="s_spo2">NORMAL</span></p>
-    </div>
+<div class="card">
+<h3>Blood Oxygen (SpO₂)</h3>
+<div class="gauge" id="g_spo2"><div class="gauge-inner"><div class="gauge-number" id="v_spo2">--</div><div class="gauge-unit">%</div></div></div>
+<div>Target: 95–100%</div>
+<p><span class="status" id="s_spo2">WAITING</span></p>
+</div>
 
-    <div class="card">
-      <h3>Body Temperature</h3>
-      <div class="gauge" id="g_body">
-        <div class="gauge-inner">
-          <div class="gauge-number" id="v_body">36.8</div>
-          <div class="gauge-unit">°C</div>
-        </div>
-      </div>
-      <div>Alert threshold: above 38°C</div>
-      <p><span class="status" id="s_body">NORMAL</span></p>
-    </div>
-  </div>
+<div class="card">
+<h3>Body Temperature</h3>
+<div class="gauge" id="g_body"><div class="gauge-inner"><div class="gauge-number" id="v_body">--</div><div class="gauge-unit">°C</div></div></div>
+<div>Alert threshold: above 38°C</div>
+<p><span class="status" id="s_body">WAITING</span></p>
+</div>
+</div>
 
-  <div class="card">
-    <h3>Medical Alert Feed</h3>
-    <div id="medicalAlerts">No abnormal readings.</div>
-  </div>
+<div class="card">
+<h3>Medical Alert Feed</h3>
+<div id="medicalAlerts">Waiting for readings.</div>
+</div>
 </section>
 
 <section id="facility" class="panel">
-  <h2>Facility Management Dashboard</h2>
-  <p class="subtitle">Room environment and facility safety monitoring</p>
+<h2>Facility Management Dashboard</h2>
+<p class="subtitle">Room environment and facility safety monitoring</p>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Room Temperature</h3>
-      <div class="gauge" id="g_room">
-        <div class="gauge-inner">
-          <div class="gauge-number" id="v_room">24</div>
-          <div class="gauge-unit">°C</div>
-        </div>
-      </div>
-      <div>Preferred range: 18–27°C</div>
-      <p><span class="status" id="s_room">NORMAL</span></p>
-    </div>
+<div class="grid">
+<div class="card">
+<h3>Room Temperature</h3>
+<div class="gauge" id="g_room"><div class="gauge-inner"><div class="gauge-number" id="v_room">--</div><div class="gauge-unit">°C</div></div></div>
+<div>Preferred range: 18–27°C</div>
+<p><span class="status" id="s_room">WAITING</span></p>
+</div>
 
-    <div class="card">
-      <h3>Room Oxygen Level</h3>
-      <div class="gauge" id="g_o2">
-        <div class="gauge-inner">
-          <div class="gauge-number" id="v_o2">20.9</div>
-          <div class="gauge-unit">% O₂</div>
-        </div>
-      </div>
-      <div>Typical air: about 20.9%</div>
-      <p><span class="status" id="s_o2">NORMAL</span></p>
-    </div>
+<div class="card">
+<h3>Room Oxygen Level</h3>
+<div class="gauge" id="g_o2"><div class="gauge-inner"><div class="gauge-number" id="v_o2">--</div><div class="gauge-unit">% O₂</div></div></div>
+<div>Typical air: about 20.9%</div>
+<p><span class="status" id="s_o2">WAITING</span></p>
+</div>
 
-    <div class="card">
-      <h3>Air Quality Index</h3>
-      <div class="gauge" id="g_aqi">
-        <div class="gauge-inner">
-          <div class="gauge-number" id="v_aqi">35</div>
-          <div class="gauge-unit">AQI</div>
-        </div>
-      </div>
-      <div>Good: AQI 0–50</div>
-      <p><span class="status" id="s_aqi">GOOD</span></p>
-    </div>
-  </div>
+<div class="card">
+<h3>Air Quality Index</h3>
+<div class="gauge" id="g_aqi"><div class="gauge-inner"><div class="gauge-number" id="v_aqi">--</div><div class="gauge-unit">AQI</div></div></div>
+<div>Good: AQI 0–50</div>
+<p><span class="status" id="s_aqi">WAITING</span></p>
+</div>
+</div>
 
-  <div class="card">
-    <h3>Facility Alert Feed</h3>
-    <div id="facilityAlerts">No abnormal readings.</div>
-  </div>
+<div class="card">
+<h3>Facility Alert Feed</h3>
+<div id="facilityAlerts">Waiting for readings.</div>
+</div>
 </section>
 
 <div class="grid">
-  <div class="card">
-    <h3>Periodic Data Aggregation</h3>
-    <p>Aggregation interval: 10 seconds</p>
-    <p>Records received: <strong id="recordCount">0</strong></p>
-    <p>Medical alert events: <strong id="medicalCount">0</strong></p>
-    <p>Facility alert events: <strong id="facilityCount">0</strong></p>
-    <p>Latest average heart rate: <strong id="avgHR">--</strong></p>
-    <p>Latest average room temperature: <strong id="avgRoom">--</strong></p>
-    <p class="subtitle" id="aggregateTime">No summary yet.</p>
-  </div>
+<div class="card">
+<h3>Periodic Data Aggregation</h3>
+<p>Aggregation interval: 10 seconds</p>
+<p>Records received: <strong id="recordCount">0</strong></p>
+<p>Medical alert events: <strong id="medicalCount">0</strong></p>
+<p>Facility alert events: <strong id="facilityCount">0</strong></p>
+<p>Latest average heart rate: <strong id="avgHR">--</strong></p>
+<p>Latest average room temperature: <strong id="avgRoom">--</strong></p>
+<p class="subtitle" id="aggregateTime">No summary yet.</p>
+</div>
 
-  <div class="card">
-    <h3>System Controls</h3>
-    <p class="subtitle">
-      Demo mode uses sample values. Live mode listens to MQTT topics.
-    </p>
-    <div class="controls">
-      <button onclick="startDemo()">Start Demo</button>
-      <button class="secondary" onclick="stopDemo()">Stop Demo</button>
-    </div>
-    <p class="subtitle">
-      Medical topic: harshini/iot/dualrole/medical
-    </p>
-    <p class="subtitle">
-      Facility topic: harshini/iot/dualrole/facility
-    </p>
-  </div>
+<div class="card">
+<h3>System Controls</h3>
+<p class="subtitle">Demo mode is optional. Live readings arrive through MQTT.</p>
+<div class="controls">
+<button onclick="startDemo()">Start Demo</button>
+<button class="secondary" onclick="stopDemo()">Stop Demo</button>
+</div>
+<p class="subtitle">Medical topic: harshini/iot/dualrole/medical</p>
+<p class="subtitle">Facility topic: harshini/iot/dualrole/facility</p>
+</div>
 </div>
 </main>
 
 <footer>
-  Educational IoT prototype. Dashboard readings are not a substitute
-  for certified medical or environmental safety equipment.
+Educational IoT prototype. Readings are not a substitute for certified medical or environmental safety equipment.
 </footer>
 
 <script>
@@ -280,17 +161,23 @@ const TOPIC_FACILITY = BASE + "facility";
 let mqttClient = null;
 let demoTimer = null;
 let aggregateTimer = null;
-let demoIndex = 0;
 let recordCount = 0;
 let medicalEvents = 0;
 let facilityEvents = 0;
 let medicalHistory = [];
 let facilityHistory = [];
 let lastAlertKeys = {};
+let lastMedicalKey = "";
+let lastFacilityKey = "";
+let lastMedicalAt = 0;
+let lastFacilityAt = 0;
+let demoIndex = 0;
+let liveMedical = false;
+let liveFacility = false;
 
 const latest = {
-  hr: 75, spo2: 98, body: 36.8,
-  room: 24, o2: 20.9, aqi: 35
+  hr:null, spo2:null, body:null,
+  room:null, o2:null, aqi:null
 };
 
 function showRole(role) {
@@ -304,38 +191,38 @@ function showRole(role) {
   document.getElementById(role + "Button").classList.add("active");
 }
 
-function setGauge(key, value, max, unit) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return;
+function setGauge(key, value, max) {
+  if (value === null || !Number.isFinite(Number(value))) return;
 
-  latest[key] = numeric;
+  const n = Number(value);
   document.getElementById("v_" + key).textContent =
-    numeric.toFixed(key === "body" || key === "room" ||
-                    key === "o2" ? 1 : 0);
+    ["body","room","o2"].includes(key) ? n.toFixed(1) : n;
 
-  const percent = Math.max(0, Math.min(100, numeric / max * 100));
-  const colors = {
-    hr: numeric < 60 || numeric > 100 ? "#dc2626" : "#16a34a",
-    spo2: numeric < 95 ? "#dc2626" : "#16a34a",
-    body: numeric > 38 ? "#dc2626" : "#16a34a",
-    room: numeric < 18 || numeric > 27 ? "#f59e0b" : "#16a34a",
-    o2: numeric < 19.5 || numeric > 23.5 ? "#dc2626" : "#16a34a",
-    aqi: numeric > 100 ? "#dc2626" :
-         numeric > 50 ? "#f59e0b" : "#16a34a"
-  };
+  const percent = Math.max(0, Math.min(100, n / max * 100));
+  const bad =
+    (key === "hr" && (n < 60 || n > 100)) ||
+    (key === "spo2" && n < 95) ||
+    (key === "body" && n > 38) ||
+    (key === "room" && (n < 18 || n > 27)) ||
+    (key === "o2" && (n < 19.5 || n > 23.5)) ||
+    (key === "aqi" && n > 50);
+
+  const color = bad ? (n > 50 && key === "aqi" ? "#f59e0b" : "#dc2626") : "#16a34a";
   document.getElementById("g_" + key).style.background =
-    `conic-gradient(${colors[key]} ${percent * 3.6}deg, #e2e8f0 0deg)`;
+    `conic-gradient(${color} ${percent * 3.6}deg,#e2e8f0 0deg)`;
 }
 
-function setStatus(key, text, level) {
+function setStatus(key, label, level) {
   const el = document.getElementById("s_" + key);
-  el.textContent = text;
+  el.textContent = label;
   el.className = "status" +
     (level === 2 ? " danger" : level === 1 ? " warn" : "");
 }
 
 function addAlert(role, message, severity) {
   const key = role + ":" + message;
+
+  // Avoid repeatedly adding the same alert on every refresh.
   if (lastAlertKeys[key]) return;
   lastAlertKeys[key] = true;
 
@@ -346,15 +233,21 @@ function addAlert(role, message, severity) {
     role === "medical" ? "medicalAlerts" : "facilityAlerts"
   );
 
-  if (container.textContent.includes("No abnormal readings.")) {
+  if (container.textContent.includes("Waiting for readings.") ||
+      container.textContent.includes("No abnormal readings.")) {
     container.innerHTML = "";
   }
 
   const item = document.createElement("div");
   item.className = "feed";
-  item.innerHTML =
-    `<strong>${severity}</strong> — ${message}<br>` +
-    `<span class="time">${new Date().toLocaleTimeString()}</span>`;
+
+  const title = document.createElement("strong");
+  title.textContent = severity + " — " + message;
+  const time = document.createElement("div");
+  time.className = "time";
+  time.textContent = new Date().toLocaleTimeString();
+
+  item.append(title, time);
   container.prepend(item);
 
   while (container.children.length > 12) {
@@ -363,109 +256,132 @@ function addAlert(role, message, severity) {
 }
 
 function checkVitals() {
-  const hr = latest.hr;
-  const spo2 = latest.spo2;
-  const body = latest.body;
+  if (latest.hr !== null) {
+    const v = latest.hr;
+    setStatus("hr", v < 60 || v > 100 ? "ABNORMAL" : "NORMAL",
+      v < 50 || v > 120 ? 2 : v < 60 || v > 100 ? 1 : 0);
+    if (v < 60 || v > 100)
+      addAlert("medical", "Heart rate outside configured range: " + v + " bpm",
+        v < 50 || v > 120 ? "HIGH" : "WARNING");
+  }
 
-  setStatus("hr", hr < 60 || hr > 100 ? "ABNORMAL" : "NORMAL",
-    hr < 50 || hr > 120 ? 2 : hr < 60 || hr > 100 ? 1 : 0);
-  setStatus("spo2", spo2 < 95 ? "LOW" : "NORMAL",
-    spo2 < 90 ? 2 : spo2 < 95 ? 1 : 0);
-  setStatus("body", body > 38 ? "HIGH" : "NORMAL",
-    body > 39 ? 2 : body > 38 ? 1 : 0);
+  if (latest.spo2 !== null) {
+    const v = latest.spo2;
+    setStatus("spo2", v < 95 ? "LOW" : "NORMAL",
+      v < 90 ? 2 : v < 95 ? 1 : 0);
+    if (v < 95)
+      addAlert("medical", "SpO₂ below configured target: " + v + "%",
+        v < 90 ? "HIGH" : "WARNING");
+  }
 
-  if (hr < 60 || hr > 100)
-    addAlert("medical", "Heart rate outside configured range: " + hr + " bpm",
-      hr < 50 || hr > 120 ? "HIGH" : "WARNING");
-  if (spo2 < 95)
-    addAlert("medical", "SpO₂ below configured target: " + spo2 + "%",
-      spo2 < 90 ? "HIGH" : "WARNING");
-  if (body > 38)
-    addAlert("medical", "Body temperature elevated: " + body + " °C",
-      body > 39 ? "HIGH" : "WARNING");
+  if (latest.body !== null) {
+    const v = latest.body;
+    setStatus("body", v > 38 ? "HIGH" : "NORMAL",
+      v > 39 ? 2 : v > 38 ? 1 : 0);
+    if (v > 38)
+      addAlert("medical", "Body temperature elevated: " + v + " °C",
+        v > 39 ? "HIGH" : "WARNING");
+  }
 }
 
 function checkFacility() {
-  const room = latest.room;
-  const o2 = latest.o2;
-  const aqi = latest.aqi;
+  if (latest.room !== null) {
+    const v = latest.room;
+    setStatus("room", v < 18 || v > 27 ? "CHECK" : "NORMAL",
+      v < 16 || v > 30 ? 2 : v < 18 || v > 27 ? 1 : 0);
+    if (v < 18 || v > 27)
+      addAlert("facility", "Room temperature outside configured range: " + v + " °C",
+        v < 16 || v > 30 ? "HIGH" : "WARNING");
+  }
 
-  setStatus("room", room < 18 || room > 27 ? "CHECK" : "NORMAL",
-    room < 16 || room > 30 ? 2 : room < 18 || room > 27 ? 1 : 0);
-  setStatus("o2", o2 < 19.5 || o2 > 23.5 ? "CHECK" : "NORMAL",
-    o2 < 19.5 ? 2 : o2 < 20 || o2 > 23.5 ? 1 : 0);
-  setStatus("aqi", aqi > 100 ? "POOR" : aqi > 50 ? "MODERATE" : "GOOD",
-    aqi > 150 ? 2 : aqi > 50 ? 1 : 0);
+  if (latest.o2 !== null) {
+    const v = latest.o2;
+    setStatus("o2", v < 19.5 || v > 23.5 ? "CHECK" : "NORMAL",
+      v < 19.5 ? 2 : v < 20 || v > 23.5 ? 1 : 0);
+    if (v < 19.5 || v > 23.5)
+      addAlert("facility", "Room oxygen reading requires investigation: " + v + "%",
+        v < 19.5 ? "HIGH" : "WARNING");
+  }
 
-  if (room < 18 || room > 27)
-    addAlert("facility", "Room temperature outside configured range: " + room + " °C",
-      room < 16 || room > 30 ? "HIGH" : "WARNING");
-  if (o2 < 19.5 || o2 > 23.5)
-    addAlert("facility", "Room oxygen reading requires investigation: " + o2 + "%",
-      o2 < 19.5 ? "HIGH" : "WARNING");
-  if (aqi > 50)
-    addAlert("facility", "Air quality index elevated: " + aqi,
-      aqi > 150 ? "HIGH" : "WARNING");
+  if (latest.aqi !== null) {
+    const v = latest.aqi;
+    setStatus("aqi", v > 100 ? "POOR" : v > 50 ? "MODERATE" : "GOOD",
+      v > 150 ? 2 : v > 50 ? 1 : 0);
+    if (v > 50)
+      addAlert("facility", "Air quality index elevated: " + v,
+        v > 150 ? "HIGH" : "WARNING");
+  }
 }
 
-function updateDashboard() {
-  setGauge("hr", latest.hr, 150, "bpm");
-  setGauge("spo2", latest.spo2, 100, "%");
-  setGauge("body", latest.body, 45, "°C");
-  setGauge("room", latest.room, 50, "°C");
-  setGauge("o2", latest.o2, 30, "%");
-  setGauge("aqi", latest.aqi, 300, "AQI");
+function updateDashboard(source) {
+  setGauge("hr", latest.hr, 150);
+  setGauge("spo2", latest.spo2, 100);
+  setGauge("body", latest.body, 45);
+  setGauge("room", latest.room, 50);
+  setGauge("o2", latest.o2, 30);
+  setGauge("aqi", latest.aqi, 300);
 
   checkVitals();
   checkFacility();
 
   recordCount++;
-  medicalHistory.push({hr: latest.hr, body: latest.body});
-  facilityHistory.push({room: latest.room});
-
-  if (medicalHistory.length > 120) medicalHistory.shift();
-  if (facilityHistory.length > 120) facilityHistory.shift();
+  if (latest.hr !== null && latest.body !== null) {
+    medicalHistory.push({hr:latest.hr, body:latest.body});
+    if (medicalHistory.length > 120) medicalHistory.shift();
+  }
+  if (latest.room !== null) {
+    facilityHistory.push({room:latest.room});
+    if (facilityHistory.length > 120) facilityHistory.shift();
+  }
 
   document.getElementById("recordCount").textContent = recordCount;
   document.getElementById("medicalCount").textContent = medicalEvents;
   document.getElementById("facilityCount").textContent = facilityEvents;
   document.getElementById("lastUpdate").textContent =
     new Date().toLocaleTimeString();
+
+  if (source) document.getElementById("dataStatus").textContent = source;
 }
 
 function aggregateData() {
-  if (!medicalHistory.length || !facilityHistory.length) return;
+  if (medicalHistory.length) {
+    const avg = medicalHistory.reduce((sum, r) => sum + r.hr, 0) /
+      medicalHistory.length;
+    document.getElementById("avgHR").textContent = avg.toFixed(1) + " bpm";
+  }
 
-  const avg = (arr, key) =>
-    arr.reduce((sum, row) => sum + row[key], 0) / arr.length;
+  if (facilityHistory.length) {
+    const avg = facilityHistory.reduce((sum, r) => sum + r.room, 0) /
+      facilityHistory.length;
+    document.getElementById("avgRoom").textContent = avg.toFixed(1) + " °C";
+  }
 
-  document.getElementById("avgHR").textContent =
-    avg(medicalHistory, "hr").toFixed(1) + " bpm";
-  document.getElementById("avgRoom").textContent =
-    avg(facilityHistory, "room").toFixed(1) + " °C";
   document.getElementById("aggregateTime").textContent =
     "Last summary: " + new Date().toLocaleTimeString() +
-    " | Samples: " + medicalHistory.length;
+    " | Medical samples: " + medicalHistory.length +
+    " | Facility samples: " + facilityHistory.length;
 }
 
 function receiveMedical(data) {
   if (data.heartRate !== undefined) latest.hr = Number(data.heartRate);
   if (data.hr !== undefined) latest.hr = Number(data.hr);
   if (data.spo2 !== undefined) latest.spo2 = Number(data.spo2);
-  if (data.bodyTemperature !== undefined)
-    latest.body = Number(data.bodyTemperature);
+  if (data.bodyTemperature !== undefined) latest.body = Number(data.bodyTemperature);
   if (data.bodyTemp !== undefined) latest.body = Number(data.bodyTemp);
-  updateDashboard();
+
+  liveMedical = true;
+  updateDashboard("Live MQTT");
 }
 
 function receiveFacility(data) {
-  if (data.roomTemperature !== undefined)
-    latest.room = Number(data.roomTemperature);
+  if (data.roomTemperature !== undefined) latest.room = Number(data.roomTemperature);
   if (data.roomTemp !== undefined) latest.room = Number(data.roomTemp);
   if (data.oxygenLevel !== undefined) latest.o2 = Number(data.oxygenLevel);
   if (data.o2 !== undefined) latest.o2 = Number(data.o2);
   if (data.aqi !== undefined) latest.aqi = Number(data.aqi);
-  updateDashboard();
+
+  liveFacility = true;
+  updateDashboard("Live MQTT");
 }
 
 function connectMQTT() {
@@ -474,58 +390,78 @@ function connectMQTT() {
     return;
   }
 
-  // Public demonstration broker; use your own broker for private deployments.
   mqttClient = mqtt.connect("wss://broker.hivemq.com:8884/mqtt", {
-    clientId: "dualrole_dashboard_" +
-      Math.random().toString(16).slice(2, 10),
+    clientId: "dualrole_" + Math.random().toString(16).slice(2, 10),
     connectTimeout: 10000,
     reconnectPeriod: 3000
   });
 
   mqttClient.on("connect", () => {
     document.getElementById("mqttStatus").textContent = "Connected";
-    mqttClient.subscribe([TOPIC_MEDICAL, TOPIC_FACILITY]);
+    mqttClient.subscribe([TOPIC_MEDICAL, TOPIC_FACILITY], error => {
+      if (error) {
+        document.getElementById("mqttStatus").textContent = "Subscribe failed";
+      }
+    });
+    document.getElementById("dataStatus").textContent =
+      "Connected — waiting for messages";
   });
 
   mqttClient.on("reconnect", () => {
     document.getElementById("mqttStatus").textContent = "Reconnecting";
   });
 
+  mqttClient.on("offline", () => {
+    document.getElementById("mqttStatus").textContent = "Offline";
+  });
+
   mqttClient.on("error", () => {
-    document.getElementById("mqttStatus").textContent = "Unavailable";
+    document.getElementById("mqttStatus").textContent = "Connection error";
   });
 
   mqttClient.on("message", (topic, message) => {
     try {
       const data = JSON.parse(message.toString());
+
+      // Real messages take priority over demo readings.
       stopDemo();
-      document.getElementById("dataStatus").textContent = "Live MQTT";
+
       if (topic === TOPIC_MEDICAL) receiveMedical(data);
       if (topic === TOPIC_FACILITY) receiveFacility(data);
-    } catch (error) {
-      console.error("Invalid MQTT JSON:", error);
+    } catch (e) {
+      console.error("Invalid MQTT JSON:", e);
     }
   });
 }
 
 function startDemo() {
   stopDemo();
+
   document.getElementById("dataStatus").textContent = "Demo mode";
+
   const samples = [
-    {hr:75, spo2:98, body:36.8, room:24, o2:20.9, aqi:35},
-    {hr:82, spo2:97, body:37.0, room:25, o2:20.8, aqi:42},
-    {hr:110, spo2:92, body:38.4, room:29, o2:20.7, aqi:78},
-    {hr:78, spo2:98, body:37.0, room:24, o2:20.9, aqi:35}
+    {hr:75,spo2:98,body:36.8,room:24,o2:20.9,aqi:35},
+    {hr:82,spo2:97,body:37.0,room:25,o2:20.8,aqi:42},
+    {hr:110,spo2:92,body:38.4,room:29,o2:20.7,aqi:78},
+    {hr:78,spo2:98,body:37.0,room:24,o2:20.9,aqi:35}
   ];
 
   function nextSample() {
+    // Don't let demo overwrite readings once live data is received.
+    if (liveMedical || liveFacility) {
+      stopDemo();
+      return;
+    }
+
     const s = samples[demoIndex % samples.length];
     demoIndex++;
+
     Object.assign(latest, {
       hr:s.hr, spo2:s.spo2, body:s.body,
       room:s.room, o2:s.o2, aqi:s.aqi
     });
-    updateDashboard();
+
+    updateDashboard("Demo mode");
   }
 
   nextSample();
@@ -533,15 +469,26 @@ function startDemo() {
 }
 
 function stopDemo() {
-  if (demoTimer) clearInterval(demoTimer);
-  demoTimer = null;
+  if (demoTimer) {
+    clearInterval(demoTimer);
+    demoTimer = null;
+  }
+
+  const liveConnected = mqttClient && mqttClient.connected;
+  document.getElementById("dataStatus").textContent =
+    liveMedical || liveFacility
+      ? "Live MQTT"
+      : liveConnected
+        ? "Demo stopped — waiting for live data"
+        : "Demo stopped — MQTT disconnected";
 }
 
 window.addEventListener("load", () => {
-  updateDashboard();
   aggregateTimer = setInterval(aggregateData, 10000);
   connectMQTT();
-  startDemo();
+
+  // Demo is deliberately NOT started automatically.
+  // Use the Start Demo button only when you need sample readings.
 });
 </script>
 </body>
